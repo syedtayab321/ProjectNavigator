@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "558563212965",
+    "project_id": "navigatorapp-cfc3a",
+    "storage_bucket": "navigatorapp-cfc3a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:558563212965:android:456570da1049cf5045974c",
+        "android_client_info": {
+          "package_name": "com.example.navigatorapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwt9tNTBtWkCdfkPWi1WknlaJQ8zVhQIo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

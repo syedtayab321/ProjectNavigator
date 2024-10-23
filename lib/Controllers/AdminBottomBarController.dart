@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:navigatorapp/Portals/AdminPortal/AdminProjectsAllRequests.dart';
 import 'package:navigatorapp/Portals/AdminPortal/ProjectRequests.dart';
 import '../Portals/AdminPortal/AdminHomePage.dart';
 import '../Portals/AdminPortal/adminProfile.dart';
@@ -14,7 +15,7 @@ class AdminBottomBarController extends GetxController {
   final List<Widget> pages = [
     AdminHomePage(),
     ProjectRequestsPage(),
-    AdminHomePage(),
+    AdminProjectRequestsScreen(),
     AdminProfilePage(),
   ];
 }

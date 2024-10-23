@@ -15,7 +15,6 @@ class _ProjectRequestState extends State<ProjectRequest> {
 
   @override
   Widget build(BuildContext context) {
-    // Fetch the project details when the screen loads
     controller.fetchProjectDetails(currentUser!.uid);
 
     return Scaffold(
@@ -23,123 +22,130 @@ class _ProjectRequestState extends State<ProjectRequest> {
         centerTitle: true,
         title: const Text(
           "Your Project",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.teal.shade800,
+        backgroundColor: Colors.tealAccent,
         elevation: 4,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Obx(() {
           if (controller.projectList.isNotEmpty) {
-            var project = controller.projectList;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: project.length,
-                    itemBuilder: (context, index) {
-                      var projectdata = project[index];
-                      return Card(
-                        elevation: 5,
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildProjectInfo(
-                                title: "Project Name:",
-                                content: projectdata['projectName'] ?? 'N/A',
-                                icon: Icons.book,
-                              ),
-                              _buildProjectInfo(
-                                title: "Description:",
-                                content: projectdata['description'] ?? 'N/A',
-                                icon: Icons.description,
-                              ),
-                              _buildProjectInfo(
-                                title: "Partner:",
-                                content: projectdata['partner'] ?? 'None',
-                                icon: Icons.people,
-                              ),
-                              _buildProjectInfo(
-                                title: "Supervisor:",
-                                content: projectdata['supervisor'] ?? 'N/A',
-                                icon: Icons.person,
-                              ),
-                              _buildProjectInfo(
-                                title: "Status:",
-                                content: projectdata['status'] ?? 'Pending',
-                                icon: Icons.info_outline,
-                                statusColor: _getStatusColor(projectdata['status'] ?? 'Pending'),
-                              ),
-                              const SizedBox(height: 10),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    try {
-                                      if (projectdata['projectId'] != null) {
-                                        // Delete the project using the stored projectId
-                                        await controller.deleteProject(projectdata['projectId']);
-                                      } else {
-                                        showErrorSnackbar('No project found to delete');
-                                      }
-                                    } catch (e) {
-                                      showErrorSnackbar('Failed to delete project');
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.redAccent.shade700,
-                                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Delete Request',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+            return ListView.builder(
+              itemCount: controller.projectList.length,
+              itemBuilder: (context, index) {
+                var projectData = controller.projectList[index];
+                return _buildProjectCard(projectData);
+              },
             );
           } else {
-            // No project found
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 80, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    "You have not added a project to review.",
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            );
+            return _buildEmptyState();
           }
         }),
       ),
     );
   }
 
-  // Helper method to build the project information layout
+  Widget _buildProjectCard(Map<String, dynamic> projectData) {
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildProjectInfo(
+              title: "Name",
+              content: projectData['projectName'] ?? 'N/A',
+              icon: Icons.book,
+            ),
+            _buildProjectInfo(
+              title: "Partner",
+              content: projectData['partner'] ?? 'None',
+              icon: Icons.people,
+            ),
+            _buildProjectInfo(
+              title: "Supervisor",
+              content: projectData['supervisor'] ?? 'N/A',
+              icon: Icons.person,
+            ),
+            _buildProjectInfo(
+              title: "Status",
+              content: "${projectData['status'] ?? 'Pending'}".toUpperCase(),
+              icon: Icons.info_outline,
+              statusColor: _getStatusColor(projectData['status']),
+            ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Message Supervisor',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (projectData['projectId'] != null) {
+                        await controller.deleteProject(projectData['projectId']);
+                      } else {
+                        showErrorSnackbar('No project found to delete');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent.shade700,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'Delete',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 80, color: Colors.grey),
+          SizedBox(height: 16),
+          Text(
+            "No project requests found.",
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProjectInfo({
     required String title,
     required String content,
@@ -147,28 +153,19 @@ class _ProjectRequestState extends State<ProjectRequest> {
     Color? statusColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
-          Icon(icon, size: 28, color: Colors.teal.shade700),
-          const SizedBox(width: 16),
+          Icon(icon, size: 24, color: Colors.teal.shade700),
+          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.teal.shade700),
-                ),
-                Text(
-                  content,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: statusColor ?? Colors.black87,
-                    fontWeight: statusColor != null ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
+            child: Text(
+              "$title: $content",
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: statusColor != null ? FontWeight.bold : FontWeight.normal,
+                color: statusColor ?? Colors.black87,
+              ),
             ),
           ),
         ],
@@ -176,12 +173,11 @@ class _ProjectRequestState extends State<ProjectRequest> {
     );
   }
 
-  // Helper method to get status color
   Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Approved':
+    switch (status.toLowerCase()) {
+      case 'approved':
         return Colors.green;
-      case 'Rejected':
+      case 'rejected':
         return Colors.red;
       default:
         return Colors.orange;

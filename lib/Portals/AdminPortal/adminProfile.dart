@@ -33,7 +33,7 @@ class AdminProfilePage extends StatelessWidget {
         title: const Text('Profile'),
       ),
       body: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

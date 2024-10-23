@@ -33,8 +33,8 @@ class AdminDashboardPage extends StatelessWidget {
           unselectedItemColor: Colors.black87,
           items: [
             FloatingNavbarItem(icon: Icons.home, title: 'Home'),
-            FloatingNavbarItem(icon: Icons.add_shopping_cart, title: 'Cart'),
-            FloatingNavbarItem(icon: Icons.notifications, title: 'Notifications'),
+            FloatingNavbarItem(icon: Icons.request_page, title: 'NewRequests'),
+            FloatingNavbarItem(icon: Icons.remove_from_queue, title: 'AllRequests'),
             FloatingNavbarItem(icon: Icons.settings, title: 'Settings'),
           ],
         );

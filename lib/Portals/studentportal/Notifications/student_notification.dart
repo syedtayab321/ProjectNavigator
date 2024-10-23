@@ -1,33 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:navigatorapp/CustomWidgets/TextWidget.dart';
+import 'package:intl/intl.dart'; // Import this for date formatting
 
 class NotificationScreen extends StatelessWidget {
-  final List<Map<String, String>> notifications = [
-    {
-      'title': 'Project Approved',
-      'message': 'Your project proposal has been approved.',
-      'date': '2024-10-19',
-    },
-    {
-      'title': 'Project Rejected',
-      'message': 'Your project proposal has been rejected.',
-      'date': '2024-10-18',
-    },
-    {
-      'title': 'New Supervisor Assigned',
-      'message': 'You have been assigned a new supervisor: Dr. Smith.',
-      'date': '2024-10-17',
-    },
-    {
-      'title': 'Submission Reminder',
-      'message': 'Don’t forget to submit your project report by next week.',
-      'date': '2024-10-16',
-    },
-    {
-      'title': 'Project Discussion Scheduled',
-      'message': 'Your project discussion is scheduled for 2024-10-20.',
-      'date': '2024-10-15',
-    },
-  ];
+  const NotificationScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,47 +17,84 @@ class NotificationScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: ListView.builder(
-          itemCount: notifications.length,
-          itemBuilder: (context, index) {
-            var notification = notifications[index];
-            return Card(
-              elevation: 3,
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16.0),
-                title: Text(
-                  notification['title']!,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  notification['message']!,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                trailing: Text(
-                  notification['date']!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-                onTap: () {
-                  // Handle notification tap if needed
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Clicked on: ${notification['title']}'),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('Notifications').snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text('Error fetching notifications'));
+            }
+            if (!snapshot.hasData) {
+              return const Center(
+                  child: CustomTextWidget(
+                    title: 'No data available',
+                    color: Colors.black,
                   ));
-                },
-              ),
+            }
+            final notifications = snapshot.data?.docs ?? [];
+            return ListView.builder(
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                var notificationData = notifications[index].data() as Map<String, dynamic>;
+                return NotificationCard(notificationData);
+              },
             );
           },
         ),
       ),
     );
+  }
+}
+
+class NotificationCard extends StatelessWidget {
+  final Map<String, dynamic> notification;
+
+  const NotificationCard(this.notification, {Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Convert Firestore Timestamp to a readable string format
+    String formattedTimestamp = _formatTimestamp(notification['timestamp']);
+
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16.0),
+        title: Text(
+          notification['From'] ?? 'No Title',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
+        ),
+        subtitle: Text(
+          notification['Message'] ?? 'No Message',
+          style: const TextStyle(fontSize: 16),
+        ),
+        trailing: Text(
+          formattedTimestamp,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+        ),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Clicked on: ${notification['From']}'),
+          ));
+        },
+      ),
+    );
+  }
+
+  String _formatTimestamp(Timestamp timestamp) {
+    return DateFormat('yyyy-MM-dd – kk:mm').format(timestamp.toDate());
   }
 }

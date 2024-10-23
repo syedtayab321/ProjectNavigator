@@ -35,7 +35,7 @@ class ProjectRequestController extends GetxController {
         }
         print('Projects fetched: ${projectList.length}');
       } else {
-        print('No project found for this student');
+        showErrorSnackbar('No project found for this student');
       }
     } catch (e) {
       showErrorSnackbar('Failed to fetch project details: $e');
@@ -46,7 +46,7 @@ class ProjectRequestController extends GetxController {
     try {
       if (projectId.isNotEmpty) {
         await FirebaseFirestore.instance
-            .collection('projects')
+            .collection('projectRequests')
             .doc(projectId)
             .delete();
         projectList.removeWhere((project) => project['projectId'] == projectId);

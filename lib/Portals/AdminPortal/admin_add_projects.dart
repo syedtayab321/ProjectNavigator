@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:navigatorapp/CustomWidgets/TextWidget.dart';
 import '../../CustomWidgets/Snakbar.dart';
 import '../../CustomWidgets/ElevatedButton.dart';
 
@@ -19,6 +20,10 @@ class _AddProjectsState extends State<AddProjects> {
     '2014-2018', '2013-2017', '2012-2016', '2011-2015', '2010-2014',
   ];
 
+  final List<String> projectTypes = [
+    'App', 'Web', 'Machine', 'AI-based', 'Others'
+  ];
+
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _projectTitleController = TextEditingController();
   final TextEditingController _supervisorController = TextEditingController();
@@ -28,6 +33,7 @@ class _AddProjectsState extends State<AddProjects> {
   String? _uploadedFileUrl;
   bool _isUploading = false;
   String? _selectedSession;
+  String? _selectedProjectType;
 
   Future<void> _pickAndUploadFile() async {
     try {
@@ -79,7 +85,9 @@ class _AddProjectsState extends State<AddProjects> {
   }
 
   Future<void> _addProjectToFirebase() async {
-    if (_formKey.currentState!.validate() && _uploadedFileUrl != null) {
+    if (_formKey.currentState!.validate() &&
+        _uploadedFileUrl != null &&
+        _selectedProjectType != null) {
       await FirebaseFirestore.instance.collection('PastProjects').add({
         'projectName': _projectTitleController.text,
         'Student1': _student1Controller.text,
@@ -87,6 +95,7 @@ class _AddProjectsState extends State<AddProjects> {
         'supervisor': _supervisorController.text,
         'description': _descriptionController.text,
         'session': _selectedSession,
+        'projectType': _selectedProjectType,
         'fileUrl': _uploadedFileUrl,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -98,6 +107,7 @@ class _AddProjectsState extends State<AddProjects> {
       _formKey.currentState!.reset();
       setState(() {
         _uploadedFileUrl = null;
+        _selectedProjectType = null;
       });
     } else {
       _showErrorSnackBar('Please fill all fields and upload a file.');
@@ -133,6 +143,7 @@ class _AddProjectsState extends State<AddProjects> {
                       maxLines: 3,
                     ),
                     _buildSessionDropdown(),
+                    _buildProjectTypeDropdown(),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -227,6 +238,43 @@ class _AddProjectsState extends State<AddProjects> {
     );
   }
 
+  Widget _buildProjectTypeDropdown() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        value: _selectedProjectType,
+        items: projectTypes.map((String type) {
+          return DropdownMenuItem<String>(
+            value: type,
+            child: Text(type),
+          );
+        }).toList(),
+        onChanged: (newValue) {
+          setState(() {
+            _selectedProjectType = newValue;
+          });
+        },
+        decoration: InputDecoration(
+          labelText: 'Select Project Type',
+          labelStyle: const TextStyle(color: Colors.black),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.tealAccent.shade400, width: 2),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please select a project type';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
   Widget _buildUploadSection() {
     return _buildCard(
       child: Column(
@@ -237,18 +285,16 @@ class _AddProjectsState extends State<AddProjects> {
             icon: const Icon(Icons.upload_file),
             label: Text(_isUploading ? 'Uploading...' : 'Upload Document'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14.0),
               backgroundColor: Colors.tealAccent.shade400,
-              textStyle: const TextStyle(fontSize: 16),
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
             ),
           ),
+          const SizedBox(height: 8),
           if (_uploadedFileUrl != null)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Text(
-                'File uploaded successfully',
-                style: TextStyle(color: Colors.green),
-              ),
+            const Text(
+              'File uploaded successfully!',
+              style: TextStyle(color: Colors.green),
+              textAlign: TextAlign.center,
             ),
         ],
       ),
@@ -256,17 +302,10 @@ class _AddProjectsState extends State<AddProjects> {
   }
 
   Widget _buildSubmitButton() {
-    return Center(
-      child: Elevated_button(
-        path: _addProjectToFirebase,
-        padding: 10,
-        text: 'Add Project',
-        radius: 10,
-        width: Get.width,
-        height: 50,
-        color: Colors.white,
-        backcolor: Colors.tealAccent.shade400,
-      ),
+    return ElevatedButton.icon(
+      onPressed: _isUploading ? null : _addProjectToFirebase,
+      label: const CustomTextWidget(title: 'Submit'),
+      icon: const Icon(Icons.check),
     );
   }
 }

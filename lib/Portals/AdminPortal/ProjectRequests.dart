@@ -21,6 +21,12 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
         'supervisor': supervisor,
         'timestamp': FieldValue.serverTimestamp(),
     });
+
+    await FirebaseFirestore.instance.collection('Notifications').add({
+      'Message': 'Your Project Approved By Admin and Supervisor Assigned to you is $supervisor',
+      'From':'Admin',
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 
   void _rejectProject(String projectId) async {
@@ -29,13 +35,18 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
       'timestamp': FieldValue.serverTimestamp(),
     });
 
+    await FirebaseFirestore.instance.collection('Notifications').add({
+      'details': 'Your Project Rejected By Admin Contact Admin for Details',
+      'from':'Admin',
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('projectRequests').snapshots(),
+        stream: FirebaseFirestore.instance.collection('projectRequests').where('status',isEqualTo: 'pending').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -190,7 +201,7 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
                 value: _selectedSupervisor,
                 items: snapshot.data!.docs.map((supervisor) {
                   return DropdownMenuItem<String>(
-                    value: supervisor.id,
+                    value: supervisor['name'],
                     child: Text(supervisor['name']),
                   );
                 }).toList(),

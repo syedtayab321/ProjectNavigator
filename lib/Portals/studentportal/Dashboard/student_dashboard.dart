@@ -14,7 +14,6 @@ class StudentDashboardPage extends StatefulWidget {
 }
 
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
-
   final List<String> sessions = [
     '2024-2028',
     '2023-2027',
@@ -32,6 +31,22 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     '2011-2015',
     '2010-2014',
   ];
+
+  List<String> filteredSessions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    filteredSessions = sessions;
+  }
+
+  void _filterSessions(String query) {
+    setState(() {
+      filteredSessions = sessions
+          .where((session) => session.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +105,26 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
         children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: TextField(
+              onChanged: (value) {
+                _filterSessions(value); // Update search results
+              },
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: 'Search session...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+            ),
+          ),
+          // List of filtered sessions
           Card(
             elevation: 3,
             shape: RoundedRectangleBorder(
@@ -102,7 +137,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Sessions',
+                    'Past Projects',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -113,7 +148,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                   ListView.builder(
                     physics: const NeverScrollableScrollPhysics(), // Disabling the internal scroll
                     shrinkWrap: true, // Allows the ListView to fit inside the parent
-                    itemCount: sessions.length,
+                    itemCount: filteredSessions.length,
                     itemBuilder: (context, index) {
                       return Container(
                         margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -129,7 +164,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                               color: Colors.grey.withOpacity(0.3),
                               spreadRadius: 2,
                               blurRadius: 5,
-                              offset: Offset(0, 3), // Changes position of shadow
+                              offset: const Offset(0, 3), // Changes position of shadow
                             ),
                           ],
                         ),
@@ -143,7 +178,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                             ),
                           ),
                           title: Text(
-                            sessions[index],
+                            filteredSessions[index],
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -162,10 +197,9 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                             color: Colors.blueAccent,
                           ),
                           onTap: () {
-                            Get.to(() => PastProjectListScreen(session: sessions[index]));
-                            print(sessions[index]);
+                            Get.to(() => PastProjectListScreen(session: filteredSessions[index]));
+                            print(filteredSessions[index]);
                           },
-
                         ),
                       );
                     },
@@ -178,8 +212,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Get.to(()=>StudentRequestProject()
-          );
+          Get.to(() => StudentRequestProject());
         },
         backgroundColor: Colors.teal,
         shape: RoundedRectangleBorder(
@@ -196,5 +229,3 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     );
   }
 }
-
-

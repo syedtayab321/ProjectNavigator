@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:navigatorapp/Portals/AdminPortal/ManageProjects/ManagePastProjects/PastProjects.dart';
 
 import 'ManageSupervioser/ManageSupervisorsPage.dart';
 import 'ManageUser/ManageUserPage.dart';
@@ -120,15 +121,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
       child: GestureDetector(
         onTap: () {
           if (title == 'Manage' && subtitle == "Users") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ManageUsersPage()),
-            );
+            Get.to(() =>  ManageUsersPage());
           } else if (title == 'Manage' && subtitle == "Supervisors") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ManageSupervisorsPage()),
-            );
+            Get.to(() => ManageSupervisorsPage());
+          }else if (title == 'Manage' && subtitle == "Projects") {
+            Get.to(() => AdminPastProjectsPage());
           }
         },
         child: Card(

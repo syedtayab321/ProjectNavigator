@@ -1,15 +1,17 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 import 'package:navigatorapp/CustomWidgets/TextWidget.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../../CustomWidgets/Snakbar.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:navigatorapp/CustomWidgets/Snakbar.dart';
 
-class ProjectDetailsScreen extends StatelessWidget {
+class AdminProjectDetailsScreen extends StatelessWidget {
   final String projectId;
 
-  ProjectDetailsScreen({super.key, required this.projectId});
+  AdminProjectDetailsScreen({super.key, required this.projectId});
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +82,21 @@ class ProjectDetailsScreen extends StatelessWidget {
                           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _deleteProject(context, projectData['fileUrl']),
+                          icon: const Icon(Icons.delete, color: Colors.white),
+                          label: const Text('Delete Project', style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -109,6 +126,7 @@ class ProjectDetailsScreen extends StatelessWidget {
       ),
     );
   }
+
   Future<void> _downloadAndOpenFile(String fileUrl, String fileName) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
@@ -120,6 +138,20 @@ class ProjectDetailsScreen extends StatelessWidget {
       OpenFile.open(filePath);
     } catch (e) {
       showErrorSnackbar('Error Could not download and open file: $e');
+    }
+  }
+
+  Future<void> _deleteProject(BuildContext context, String? fileUrl) async {
+    try {
+      if (fileUrl != null) {
+        await FirebaseStorage.instance.refFromURL(fileUrl).delete();
+      }
+      await FirebaseFirestore.instance.collection('PastProjects').doc(projectId).delete();
+      showSuccessSnackbar('Project deleted successfully.');
+      Get.back();
+      Get.back();
+    } catch (e) {
+      showErrorSnackbar('Error deleting project: $e');
     }
   }
 

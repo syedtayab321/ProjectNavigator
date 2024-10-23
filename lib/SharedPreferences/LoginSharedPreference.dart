@@ -40,7 +40,6 @@ class AuthService {
     await prefs.setString('uid', uid);
   }
 
-  // Get user ID from shared preferences
   Future<String?> getUserFromPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('uid');

@@ -124,56 +124,66 @@ class _StudentMessageScreenState extends State<StudentMessageScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       child: Align(
                         alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Stack(
+                        child: Row(
+                          mainAxisAlignment: isSender ? MainAxisAlignment.end : MainAxisAlignment.start,
                           children: [
-                            // Message container
-                            Container(
-                              padding: const EdgeInsets.all(14.0),
-                              decoration: BoxDecoration(
-                                color: isSender ? Colors.teal.shade300 : Colors.white,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(isSender ? 12 : 0),
-                                  topRight: Radius.circular(isSender ? 0 : 12),
-                                  bottomLeft: const Radius.circular(12),
-                                  bottomRight: const Radius.circular(12),
+                            if (!isSender) const SizedBox(width: 10),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.all(10.0),
+                                decoration: BoxDecoration(
+                                  color: isSender ? Colors.teal.shade300 : Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(isSender ? 12 : 0),
+                                    topRight: Radius.circular(isSender ? 0 : 12),
+                                    bottomLeft: const Radius.circular(12),
+                                    bottomRight: const Radius.circular(12),
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 5.0,
+                                      spreadRadius: 1.0,
+                                    )
+                                  ],
                                 ),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 5.0,
-                                    spreadRadius: 1.0,
-                                  )
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    messageData['message'],
-                                    style: TextStyle(
-                                      color: isSender ? Colors.white : Colors.black87,
-                                      fontSize: 16,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    messageData['message'] == 'Delete For Everyone'?
+                                    Text(
+                                      messageData['message'],
+                                      style: TextStyle(
+                                        color: isSender ? Colors.red : Colors.red,
+                                        fontSize: 16,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ):
+                                    Text(
+                                      messageData['message'],
+                                      style: TextStyle(
+                                        color: isSender ? Colors.white : Colors.black87,
+                                        fontSize: 16,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    timestamp,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isSender ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      timestamp,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isSender ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                            // Positioned delete icon on the message
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                                onPressed: () => _showDeleteDialog(messageData['MessageId']),
-                              ),
+                            const SizedBox(width: 2),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _showDeleteDialog(messageData['MessageId']),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                             ),
                           ],
                         ),
@@ -278,21 +288,23 @@ class _StudentMessageScreenState extends State<StudentMessageScreen> {
     showSuccessSnackbar('Message deleted for you');
   }
   void _deleteMessageForEveryone(String messageId) async {
-    // Delete from the current user's messages
     await FirebaseFirestore.instance
         .collection('Chats')
         .doc(user!.uid)
         .collection('Messages')
         .doc(messageId)
-        .delete();
+        .update({
+      'message':'Delete For Everyone'
+    });
 
-    // Delete from the receiver's messages
     await FirebaseFirestore.instance
         .collection('Chats')
         .doc(widget.receiverId)
         .collection('Messages')
         .doc(messageId)
-        .delete();
+        .update({
+      'message':'Delete For Everyone'
+    });
 
     showSuccessSnackbar('Message deleted for everyone');
   }

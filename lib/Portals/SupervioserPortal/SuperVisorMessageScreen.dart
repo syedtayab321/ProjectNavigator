@@ -129,12 +129,10 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                         child: Row(
                           mainAxisAlignment: isSender ? MainAxisAlignment.end : MainAxisAlignment.start,
                           children: [
-                            // For spacing on receiver's side if needed
                             if (!isSender) const SizedBox(width: 10),
-                            // Message container and delete icon will be in a row
                             Flexible(
                               child: Container(
-                                padding: const EdgeInsets.all(10.0),  // Reduce padding to make it smaller
+                                padding: const EdgeInsets.all(10.0),
                                 decoration: BoxDecoration(
                                   color: isSender ? Colors.teal.shade300 : Colors.white,
                                   borderRadius: BorderRadius.only(
@@ -154,6 +152,15 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
+                                    messageData['message'] == 'Delete For Everyone'?
+                                    Text(
+                                      messageData['message'],
+                                      style: TextStyle(
+                                        color: isSender ? Colors.red : Colors.red,
+                                        fontSize: 16,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ):
                                     Text(
                                       messageData['message'],
                                       style: TextStyle(
@@ -173,12 +180,12 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8), // Small spacing between message and icon
+                            const SizedBox(width: 3),
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () => _showDeleteDialog(messageData['MessageId']),
-                              padding: EdgeInsets.zero, // Removes padding around the icon
-                              constraints: const BoxConstraints(), // Keeps the icon size small
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
                             ),
                           ],
                         ),
@@ -282,13 +289,14 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
       showSuccessSnackbar('Message deleted for you');
   }
   void _deleteMessageForEveryone(String messageId) async {
-    // Delete from the current user's messages
     await FirebaseFirestore.instance
         .collection('Chats')
         .doc(user!.uid)
         .collection('Messages')
         .doc(messageId)
-        .delete();
+        .update({
+         'message':'Delete For Everyone'
+        });
 
     // Delete from the receiver's messages
     await FirebaseFirestore.instance
@@ -296,7 +304,9 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
         .doc(widget.receiverId)
         .collection('Messages')
         .doc(messageId)
-        .delete();
+        .update({
+      'message':'Delete For Everyone'
+        });
 
     showSuccessSnackbar('Message deleted for everyone');
   }

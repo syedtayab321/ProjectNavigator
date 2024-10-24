@@ -12,95 +12,134 @@ class ManageSupervisorsPage extends StatefulWidget {
 }
 
 class _ManageSupervisorsPageState extends State<ManageSupervisorsPage> {
-   User? user =FirebaseAuth.instance.currentUser;
+  User? user = FirebaseAuth.instance.currentUser;
+  bool isLoading = false;
+  String? selectedDepartment;
+
+  final List<String> departments = [
+    'Computer Science',
+    'Electrical Engineering', 'Mechanical Engineering',
+    'Civil Engineering', 'Software Engineering'
+  ];
+
   void _showAddEditSupervisorDialog(
-      {String? name, String? email, String? password, String? department, int? index,String? uid}) {
+      {String? name, String? email, String? password, String? department, int? index, String? uid}) {
     TextEditingController supervisorNameController = TextEditingController(text: name ?? '');
     TextEditingController supervisorEmailController = TextEditingController(text: email ?? '');
     TextEditingController supervisorPasswordController = TextEditingController(text: password ?? '');
-    TextEditingController supervisorDepartmentController =
-    TextEditingController(text: department ?? '');
+
+    selectedDepartment = department;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            index == null ? 'Add New Supervisor' : 'Edit Supervisor',
-            style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: index == null?
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField('Supervisor Name', supervisorNameController),
-                const SizedBox(height: 10),
-                _buildTextField('Supervisor Email', supervisorEmailController),
-                const SizedBox(height: 10),
-                _buildTextField('Supervisor Password', supervisorPasswordController),
-                const SizedBox(height: 10),
-                _buildTextField('Supervisor Department', supervisorDepartmentController),
-              ],
-            ): Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildTextField('Supervisor Name', supervisorNameController),
-                const SizedBox(height: 10),
-                _buildTextField('Supervisor Department', supervisorDepartmentController),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel', style: TextStyle(color: Colors.red)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                   if(index == null){
-                     try{
-                       createSuperVisorAndAddData(
-                           supervisorNameController.text,
-                           supervisorEmailController.text,
-                           supervisorPasswordController.text,
-                           supervisorDepartmentController.text
-                       );
-                     }catch (e){
-                       showErrorSnackbar(e.toString());
-                     }
-                   }else
-                     {
-                       try{
-                         updateSupervisor(
-                           uid ?? '',
-                           supervisorNameController.text,
-                           supervisorDepartmentController.text,
-                         );
-                         showSuccessSnackbar('Data Added Successfully');
-                       } catch (e){
-                         showErrorSnackbar(e.toString());
-                       }finally{
-                         Get.back();
-                       }
-                     }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        return StatefulBuilder( // Use StatefulBuilder to update the dropdown selection
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(index == null ? 'Add' : 'Update', style: const TextStyle(color: Colors.white)),
-            ),
-          ],
+              title: Text(
+                index == null ? 'Add New Supervisor' : 'Edit Supervisor',
+                style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTextField('Supervisor Name', supervisorNameController),
+                    const SizedBox(height: 10),
+                    if (index == null) ...[
+                      _buildTextField('Supervisor Email', supervisorEmailController),
+                      const SizedBox(height: 10),
+                      _buildTextField('Supervisor Password', supervisorPasswordController),
+                      const SizedBox(height: 10),
+                    ],
+                    DropdownButtonFormField<String>(
+                      value: selectedDepartment,
+                      hint: const Text('Select Department'),
+                      items: departments.map((String department) {
+                        return DropdownMenuItem<String>(
+                          value: department,
+                          child: Text(department),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedDepartment = newValue;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Department',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+                ),
+                isLoading
+                    ? const CircularProgressIndicator() // Show loading indicator while data is being added
+                    : ElevatedButton(
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+
+                    if (index == null) {
+                      try {
+                        await createSuperVisorAndAddData(
+                            supervisorNameController.text,
+                            supervisorEmailController.text,
+                            supervisorPasswordController.text,
+                            selectedDepartment ?? '');
+                        showSuccessSnackbar('Supervisor added successfully!');
+                      } catch (e) {
+                        showErrorSnackbar(e.toString());
+                      }
+                    } else {
+                      try {
+                        await updateSupervisor(
+                          uid ?? '',
+                          supervisorNameController.text,
+                          selectedDepartment ?? '',
+                        );
+                        showSuccessSnackbar('Supervisor updated successfully!');
+                      } catch (e) {
+                        showErrorSnackbar(e.toString());
+                      }
+                    }
+
+                    setState(() {
+                      isLoading = false;
+                    });
+
+                    Get.back();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                  child: Text(index == null ? 'Add' : 'Update',
+                      style: const TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
   Widget _buildTextField(String label, TextEditingController controller) {
     return TextField(
       controller: controller,
@@ -116,7 +155,6 @@ class _ManageSupervisorsPageState extends State<ManageSupervisorsPage> {
     );
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,7 +183,10 @@ class _ManageSupervisorsPageState extends State<ManageSupervisorsPage> {
             const SizedBox(height: 20),
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('Users').where('role', isEqualTo: 'supervisor').snapshots(),
+                stream: FirebaseFirestore.instance
+                    .collection('Users')
+                    .where('role', isEqualTo: 'supervisor')
+                    .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -223,7 +264,6 @@ class _ManageSupervisorsPageState extends State<ManageSupervisorsPage> {
                                           ),
                                         ),
                                       ),
-
                                     ],
                                   ),
                                 ],
@@ -244,24 +284,21 @@ class _ManageSupervisorsPageState extends State<ManageSupervisorsPage> {
         onPressed: () {
           _showAddEditSupervisorDialog();
         },
-        backgroundColor: Colors.teal.shade700,
-        tooltip: 'Add Supervisor',
+        backgroundColor: Colors.teal,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  // Helper widget for displaying supervisor details
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String title, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         children: [
           Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            '$title ',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal, fontSize: 16),
           ),
-          const SizedBox(width: 10),
           Expanded(
             child: Text(
               value,

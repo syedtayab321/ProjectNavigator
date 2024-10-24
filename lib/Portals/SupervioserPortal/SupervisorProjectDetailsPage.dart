@@ -1,13 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:navigatorapp/CustomWidgets/Snakbar.dart';
 import 'package:navigatorapp/CustomWidgets/TextWidget.dart';
+import 'package:navigatorapp/Portals/SupervioserPortal/SuperVisorMessageScreen.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
-
-import 'MesssageScreen.dart';
 
 class ProjectDetailsPage extends StatelessWidget {
   final Map<String, dynamic> project;
@@ -95,8 +93,11 @@ class ProjectDetailsPage extends StatelessWidget {
               Center(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // Navigate to message screen
-                    _navigateToMessageScreen(context);
+                    Get.to(
+                        SupervisorMessageScreen(
+                      receiverId: project['studentId'],
+                      receiverName: project['studentName'],
+                    ));
                   },
                   icon: const Icon(Icons.message,color: Colors.white,),
                   label: const CustomTextWidget(title: "Message",color: Colors.white,),
@@ -177,11 +178,6 @@ class ProjectDetailsPage extends StatelessWidget {
     } catch (e) {
       showErrorSnackbar('Error downloading file: $e');
     }
-  }
-
-  void _navigateToMessageScreen(BuildContext context) {
-    Get.to(
-        MessageScreen(studentName: project['studentName']));
   }
 }
 

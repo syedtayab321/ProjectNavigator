@@ -30,7 +30,9 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
   ['2020-2024', '2021-2025', '2022-2026',
     '2023-2027', '2024-2028', '2025-2029',
     '2026-2030', '2027-2031','2028-2032','2029-2033','2030-2034'];
-  final List<String> _departments = ['Computer Science', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Software Engineering'];
+  final List<String> _departments = ['Computer Science',
+    'Electrical Engineering', 'Mechanical Engineering',
+    'Civil Engineering', 'Software Engineering'];
 
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {

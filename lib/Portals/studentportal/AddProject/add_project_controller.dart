@@ -8,7 +8,6 @@ import 'package:get/get.dart';
 import '../../../CustomWidgets/Snakbar.dart';
 
 class AddProjectController extends GetxController {
-  // Text controllers for fields
   final TextEditingController projectNameController = TextEditingController();
   final TextEditingController sessionController = TextEditingController();
   final TextEditingController partnerController = TextEditingController();
@@ -20,7 +19,7 @@ class AddProjectController extends GetxController {
   String? fileUrl;
   var isLoading = false.obs;
   final CollectionReference usersRef = FirebaseFirestore.instance.collection('Users');
-  final List<String> domains = ['Machine Learning', 'Mobile Development', 'Web Development', 'Data Science','Other'];
+  final List<String> domains = ['App', 'Web', 'Machine', 'AI-based', 'Others'];
   User? currentUser = FirebaseAuth.instance.currentUser;
   var supervisors = <String>[].obs;
   DocumentSnapshot<Map<String, dynamic>>? studentData;

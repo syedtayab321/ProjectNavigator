@@ -28,7 +28,7 @@ class LoginController extends GetxController {
           UserModel? userModel = await authService.getUserRole(uid!);
           if (userModel != null) {
             isLoading.value = false;
-            if (userModel.role == 'Admin') {
+            if (userModel.role == 'admin') {
               Get.offAll(() => AdminDashboardPage(), transition: Transition.fadeIn, duration: const Duration(seconds: 2));
               showSuccessSnackbar('Login Successfully');
             } else if (userModel.role == 'Student') {

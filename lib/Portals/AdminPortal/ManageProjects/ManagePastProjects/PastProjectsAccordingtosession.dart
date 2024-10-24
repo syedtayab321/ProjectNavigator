@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:navigatorapp/Portals/studentportal/PastProjects/past_project_detail.dart';
 import 'package:navigatorapp/Portals/studentportal/PastProjects/projectsFilterController.dart';
 
 import 'PastProjectDetailsScree.dart';

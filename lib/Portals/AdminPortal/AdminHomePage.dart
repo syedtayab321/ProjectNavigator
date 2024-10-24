@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:navigatorapp/Portals/AdminPortal/ManageProjects/ManagePastProjects/PastProjects.dart';
 
+import 'ManageFeedbacks/FeedbackPages.dart';
 import 'ManageSupervioser/ManageSupervisorsPage.dart';
 import 'ManageUser/ManageUserPage.dart';
 import 'admin_add_projects.dart';
@@ -75,7 +76,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Add New Project',
+                  'Add Past Project',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -84,7 +85,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  'Click to add a new project ',
+                  'Add Past Project Details ',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white,
@@ -93,7 +94,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ],
             ),
             Spacer(),
-            Icon(Icons.arrow_forward_ios, color: Colors.orangeAccent),
+            Icon(Icons.arrow_forward_ios, color: Colors.white),
           ],
         ),
       ),
@@ -101,15 +102,24 @@ class _AdminHomePageState extends State<AdminHomePage> {
   }
 
   Widget _buildKeyMetrics(bool isSmallScreen) {
-    return Wrap(
-      spacing: 40.0,
-      runSpacing: 16.0,
-      alignment: WrapAlignment.spaceEvenly,
+    return Column(
       children: [
-        _buildMetricCard('Manage', "Users", Icons.people, Colors.blue, Colors.lightBlueAccent),
-        _buildMetricCard('Manage', "Supervisors", Icons.supervised_user_circle, Colors.green, Colors.tealAccent),
-        _buildMetricCard('Manage', 'Projects', Icons.work, Colors.orange, Colors.deepOrangeAccent),
-        _buildMetricCard('Manage', 'Feedback', Icons.feedback, Colors.purple, Colors.deepPurpleAccent),
+        const SizedBox( height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildMetricCard('Manage', "Users", Icons.people, Colors.blue, Colors.lightBlueAccent),
+            _buildMetricCard('Manage', "Supervisors", Icons.supervised_user_circle, Colors.green, Colors.tealAccent),
+          ],
+        ),
+        const SizedBox( height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+              _buildMetricCard('Manage', 'Projects', Icons.work, Colors.orange, Colors.deepOrangeAccent),
+              _buildMetricCard('Manage', 'Feedback', Icons.feedback, Colors.purple, Colors.deepPurpleAccent),
+          ],
+        ),
       ],
     );
   }
@@ -126,6 +136,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
             Get.to(() => ManageSupervisorsPage());
           }else if (title == 'Manage' && subtitle == "Projects") {
             Get.to(() => AdminPastProjectsPage());
+          }else if (title == 'Manage' && subtitle == "Feedback") {
+            Get.to(() => FeedbackPage());
           }
         },
         child: Card(

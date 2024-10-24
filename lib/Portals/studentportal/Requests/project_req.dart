@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:navigatorapp/CustomWidgets/TextWidget.dart';
 import 'package:navigatorapp/Portals/studentportal/Requests/project_req_controller.dart';
+import 'package:navigatorapp/Portals/studentportal/StudentMessageScreen.dart';
 import '../../../CustomWidgets/Snakbar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProjectRequest extends StatefulWidget {
   @override
@@ -85,8 +88,26 @@ class _ProjectRequestState extends State<ProjectRequest> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  projectData['status'] == 'approved'?
                   ElevatedButton(
                     onPressed: () async {
+                      QuerySnapshot userData = await FirebaseFirestore.instance
+                          .collection('Users')
+                          .where('name', isEqualTo: projectData['supervisor'])
+                          .get();
+
+                      if (userData.docs.isNotEmpty) {
+                        String receiverId = userData.docs.first.id;
+
+                        Get.to(
+                          StudentMessageScreen(
+                            receiverId: receiverId,
+                            receiverName: projectData['supervisor'],
+                          ),
+                        );
+                      } else {
+                        showErrorSnackbar('Supervisor not found');
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
@@ -99,7 +120,8 @@ class _ProjectRequestState extends State<ProjectRequest> {
                       'Message Supervisor',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                  ),
+                  ):
+                  const CustomTextWidget(title: ''),
                   ElevatedButton(
                     onPressed: () async {
                       if (projectData['projectId'] != null) {

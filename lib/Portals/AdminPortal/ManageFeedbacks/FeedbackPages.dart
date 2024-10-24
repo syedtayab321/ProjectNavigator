@@ -1,128 +1,103 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:navigatorapp/CustomWidgets/TextWidget.dart';
 
-class StudentFeedbacksScreen extends StatefulWidget {
-  @override
-  _StudentFeedbacksScreenState createState() => _StudentFeedbacksScreenState();
+class FeedbackModel {
+  final String id;
+  final String userName;
+  final String profession;
+  final String feedback;
+  final DateTime date;
+  final double rating;
+
+  FeedbackModel({
+    required this.id,
+    required this.userName,
+    required this.profession,
+    required this.feedback,
+    required this.date,
+    required this.rating,
+  });
+
+  factory FeedbackModel.fromFirestore(Map<String, dynamic> data, String id) {
+    return FeedbackModel(
+      id: id,
+      userName: data['UserName'] ?? 'Anonymous',
+      profession: data['Profession'] ?? 'Unknown',
+      feedback: data['feedback'] ?? '',
+      date: (data['timestamp'] as Timestamp).toDate(),
+      rating: data['rating']?.toDouble() ?? 0.0,
+    );
+  }
 }
 
-class _StudentFeedbacksScreenState extends State<StudentFeedbacksScreen> {
+class FeedbackPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Student Feedbacks'),
-        backgroundColor: Colors.teal,
+        title: const CustomTextWidget(title: 'Feedbacks', color: Colors.white),
+        backgroundColor: Colors.teal.shade800,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              'All Feedbacks',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(child: _buildFeedbackList()),
-          ],
-        ),
-      ),
-    );
-  }
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('Feedback')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-  // Build the feedback list from Firestore
-  Widget _buildFeedbackList() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('studentFeedbacks').orderBy('timestamp', descending: true).snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+          List<FeedbackModel> feedbackList = snapshot.data!.docs.map((doc) {
+            return FeedbackModel.fromFirestore(doc.data() as Map<String, dynamic>, doc.id);
+          }).toList();
 
-        if (snapshot.hasError) {
-          return const Center(child: Text('Error loading feedbacks.'));
-        }
+          if (feedbackList.isEmpty) {
+            return const Center(child: Text('No feedback available.'));
+          }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text('No feedbacks available.'));
-        }
+          return ListView.builder(
+            itemCount: feedbackList.length,
+            itemBuilder: (context, index) {
+              final feedback = feedbackList[index];
+              return Card(
+                margin: const EdgeInsets.all(8.0),
+                elevation: 5,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16.0),
+                  title: CustomTextWidget(title: feedback.userName, size: 18.0, weight: FontWeight.bold),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CustomTextWidget(title: feedback.profession, size: 14.0, color: Colors.grey.shade700),
+                      const SizedBox(height: 8.0),
+                      CustomTextWidget(title: feedback.feedback, size: 16.0),
+                      const SizedBox(height: 8.0),
+                      RatingBar.builder(
+                        initialRating: feedback.rating,
+                        minRating: 1,
+                        direction: Axis.horizontal,
+                        allowHalfRating: true,
+                        itemCount: 5,
+                        itemBuilder: (context, _) => const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                        ),
+                        ignoreGestures: true,
+                        onRatingUpdate:(double){
 
-        var feedbacks = snapshot.data!.docs;
-
-        return ListView.builder(
-          itemCount: feedbacks.length,
-          itemBuilder: (context, index) {
-            var feedbackData = feedbacks[index].data() as Map<String, dynamic>;
-            return _buildFeedbackCard(feedbackData);
-          },
-        );
-      },
-    );
-  }
-
-  // Build a card widget to display each feedback
-  Widget _buildFeedbackCard(Map<String, dynamic> feedbackData) {
-    // Convert Timestamp to Date String
-    Timestamp timestamp = feedbackData['timestamp'];
-    String formattedDate = DateFormat('yyyy-MM-dd – kk:mm').format(timestamp.toDate());
-
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 6,
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow(Icons.person, 'Student', feedbackData['studentName']),
-            const Divider(thickness: 1, color: Colors.grey),
-            _buildDetailRow(Icons.feedback, 'Feedback', feedbackData['feedback']),
-            const Divider(thickness: 1, color: Colors.grey),
-            _buildDetailRow(Icons.star, 'Rating', '${feedbackData['rating']} / 5'),
-            const Divider(thickness: 1, color: Colors.grey),
-            _buildDetailRow(Icons.date_range, 'Submitted On', formattedDate),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Reusable widget to show the details in the feedback card
-  Widget _buildDetailRow(IconData icon, String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.teal, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
+                        },// Disable interactions
+                      ),
+                    ],
                   ),
+                  trailing: CustomTextWidget(title: '${feedback.date.day}/${feedback.date.month}/${feedback.date.year}'),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(fontSize: 15, color: Colors.black87),
-                ),
-              ],
-            ),
-          ),
-        ],
+              );
+            },
+          );
+        },
       ),
     );
   }

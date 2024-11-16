@@ -70,7 +70,6 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Log In Header Text
                   Text(
                     'Log In Now',
                     style: TextStyle(
@@ -86,8 +85,6 @@ class _LoginPageState extends State<LoginPage> {
                     color: Colors.grey,
                   ),
                   const SizedBox(height: 30),
-
-                  // Email Input Field
                   TextFormField(
                     keyboardType: TextInputType.emailAddress,
                     controller: loginController.emailController,

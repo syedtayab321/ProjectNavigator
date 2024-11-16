@@ -272,6 +272,7 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
                     if (loading)
                       const CircularProgressIndicator(),
                     const SizedBox(height: 20),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

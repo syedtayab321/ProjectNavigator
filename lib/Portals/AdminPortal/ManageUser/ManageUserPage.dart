@@ -79,9 +79,12 @@ class ManageUsersPage extends StatelessWidget {
                           final student = students[index].data() as Map<String, dynamic>;
                           return UserCard(
                             name: student['name'] ?? 'N/A',
+                            uid: student['uid'] ?? 'N/A',
                             rollno: student['roll_no'] ?? 'N/A',
                             email: student['email'] ?? 'N/A',
                             department: student['department'] ?? 'N/A',
+                            session: student['session'] ?? 'N/A',
+                            status: student['status'] ?? 'N/A',
                             semester: student['semester'] ?? 'N/A',
                           );
                         },
@@ -101,17 +104,21 @@ class ManageUsersPage extends StatelessWidget {
 
 class UserCard extends StatelessWidget {
   final String name;
+  final String uid;
   final String rollno;
   final String email;
   final String department;
-  final String semester;
+  final String session;
+  final String status;
 
   UserCard({
     required this.name,
+    required this.uid,
     required this.rollno,
     required this.email,
     required this.department,
-    required this.semester,
+    required this.session,
+    required this.status, required semester,
   });
 
   @override
@@ -143,10 +150,12 @@ class UserCard extends StatelessWidget {
               onPressed: () {
                 Get.to(() => StudentDetailsPage(
                   name: name,
-                  registrationNo: rollno,
+                  uid: uid,
+                  rollno: rollno,
                   email: email,
-                  phone:department,
-                  status: semester,
+                  department:department,
+                  session: session,
+                  status: status,
                 ));
               },
               child: Text(
@@ -163,18 +172,47 @@ class UserCard extends StatelessWidget {
 
 class StudentDetailsPage extends StatelessWidget {
   final String name;
-  final String registrationNo;
+  final String uid;
+  final String rollno;
   final String email;
-  final String phone;
+  final String department;
+  final String session;
   final String status;
 
   StudentDetailsPage({
     required this.name,
-    required this.registrationNo,
+    required this.uid,
     required this.email,
-    required this.phone,
+    required this.department,
     required this.status,
+    required this.rollno,
+    required this.session,
   });
+
+  void updateStatus(String id, String status, String email) async {
+    try {
+      await FirebaseFirestore.instance.collection('Users').doc(id).update({
+        'status': status,
+      });
+
+      Get.snackbar(
+        'Success',
+        'Student status updated to $status',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.teal.shade700,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to update status: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,28 +235,43 @@ class StudentDetailsPage extends StatelessWidget {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            buildDetailCard('Roll No:', registrationNo),
+            buildDetailCard('Roll No:', rollno),
             buildDetailCard('Email:', email),
-            buildDetailCard('Department:', phone),
-            buildDetailCard('Semester:', status),
+            buildDetailCard('Department:', department),
+            buildDetailCard('Session:', session),
+            buildDetailCard('Status:', status),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Elevated_button(
-                  text: 'Delete Student',
-                  color: Colors.white,
-                  backcolor: Colors.teal.shade700,
-                  path: () {
-                    // Handle Delete Student action
-                  },
-                  radius: 10.0,
-                  padding: 16.0,
-                  fontsize: 16.0,
-                  width: 310.0,
-                ),
-              ],
+            Elevated_button(
+              text: 'Delete Student',
+              color: Colors.white,
+              backcolor: Colors.teal.shade700,
+              path: () {
+
+              },
+              radius: 10.0,
+              padding: 16.0,
+              fontsize: 16.0,
+              width: 310.0,
             ),
+            const SizedBox(height: 10,),
+            Elevated_button(
+              text: 'Request Status',
+              color: Colors.white,
+              backcolor: Colors.teal.shade700,
+              path: () {
+                _showRequestDialog(
+                  context,
+                  uid,
+                  email,
+                  updateStatus,
+                );
+              },
+              radius: 10.0,
+              padding: 16.0,
+              fontsize: 16.0,
+              width: 310.0,
+            ),
+
           ],
         ),
       ),
@@ -243,4 +296,66 @@ class StudentDetailsPage extends StatelessWidget {
       ),
     );
   }
+}
+void _showRequestDialog(BuildContext context, String id, String email, Function(String, String, String) updateStatus) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.help_outline, color: Colors.blue, size: 28),
+            SizedBox(width: 10),
+            Text(
+              'Request Confirmation',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          "Do you want to approve or reject the request?",
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () async {
+                  updateStatus(id, 'approved', email);
+                  Navigator.pop(context);
+                },
+                child: const Text('Approve', style: TextStyle(color: Colors.white)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () async {
+                  updateStatus(id, 'rejected', email);
+                  Navigator.pop(context);  // Reject and close
+                },
+                child: const Text('Reject', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
 }

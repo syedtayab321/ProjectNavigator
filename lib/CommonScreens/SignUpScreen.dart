@@ -57,6 +57,7 @@ class _StudentSignUpPageState extends State<StudentSignUpPage> {
             'session': _selectedSession,
             'department': _selectedDepartment,
             'roll_no': _rollNoController.text,
+            'status': "pending",
           });
           await _auth.signOut();
           Get.off(LoginPage());

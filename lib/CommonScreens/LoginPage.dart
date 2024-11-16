@@ -188,7 +188,6 @@ class _LoginPageState extends State<LoginPage> {
                         icon: const Icon(Icons.g_mobiledata),
                         color: Colors.blue[700],
                         onPressed: () {
-                          // LinkedIn Login functionality
                         },
                       ),
                     ],

@@ -69,34 +69,36 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
             ),
             child: const Padding(
               padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 60.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'FYP Navigator - Student Portal',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'FYP Navigator - Student Portal',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text(
-                    'Explore Past Projects and Generate New Ideas. Consult with supervisors and make your project journey easier!',
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w400,
+                    SizedBox(height: 8.0),
+                    Text(
+                      'Explore Past Projects and Generate New Ideas. Consult with supervisors and make your project journey easier!',
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 10.0),
-                  Divider(
-                    color: Colors.white70,
-                    thickness: 1,
-                    endIndent: 50,
-                    indent: 0,
-                  ),
-                ],
+                    SizedBox(height: 10.0),
+                    Divider(
+                      color: Colors.white70,
+                      thickness: 1,
+                      endIndent: 50,
+                      indent: 0,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

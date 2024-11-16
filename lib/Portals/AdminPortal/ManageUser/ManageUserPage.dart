@@ -12,7 +12,7 @@ class ManageUsersPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Manage Users/Student',
+          'All Students',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.tealAccent.shade700,
@@ -66,13 +66,13 @@ class ManageUsersPage extends StatelessWidget {
                   } else {
                     final students = snapshot.data!.docs;
                     return SizedBox(
-                      height: screenHeight * 0.6,
+                      height: screenHeight * 0.35,
                       child: GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
-                          childAspectRatio: screenWidth / (screenHeight * 0.6),
+                          childAspectRatio: screenWidth / (screenHeight * 0.35),
                         ),
                         itemCount: students.length,
                         itemBuilder: (context, index) {
@@ -98,6 +98,7 @@ class ManageUsersPage extends StatelessWidget {
         ),
       ),
     );
+    ///
   }
 }
 
@@ -129,41 +130,44 @@ class UserCard extends StatelessWidget {
         side: BorderSide(color: Colors.teal.shade700),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const CircleAvatar(
-              radius: 40,
-              backgroundImage: AssetImage('assets/user_image.png'), // Replace with your image
-            ),
-            const SizedBox(height: 10),
-            Text(
-              name,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 5),
-            TextButton(
-              onPressed: () {
-                Get.to(() => StudentDetailsPage(
-                  name: name,
-                  uid: uid,
-                  rollno: rollno,
-                  email: email,
-                  department:department,
-                  session: session,
-                  status: status,
-                ));
-              },
-              child: Text(
-                'View Details',
-                style: TextStyle(color: Colors.teal.shade700),
+              const SizedBox(height: 5),
+              Text(
+                session,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+              TextButton(
+                onPressed: () {
+                  Get.to(() => StudentDetailsPage(
+                    name: name,
+                    uid: uid,
+                    rollno: rollno,
+                    email: email,
+                    department:department,
+                    session: session,
+                    status: status,
+                  ));
+                },
+                child: Text(
+                  'View Details',
+                  style: TextStyle(color: Colors.teal.shade700),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -219,17 +223,13 @@ class StudentDetailsPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Student Details', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal.shade700,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage('assets/user_image.png'), // Replace with actual image
-            ),
-            const SizedBox(height: 10),
             Text(
               name,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -246,7 +246,7 @@ class StudentDetailsPage extends StatelessWidget {
               color: Colors.white,
               backcolor: Colors.teal.shade700,
               path: () {
-
+                _showDeleteConfirmationDialog(context, uid);
               },
               radius: 10.0,
               padding: 16.0,
@@ -294,6 +294,89 @@ class StudentDetailsPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+void _showDeleteConfirmationDialog(BuildContext context, String id) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.delete, color: Colors.red, size: 28),
+            SizedBox(width: 10),
+            Text(
+              'Delete Confirmation',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          "Are you sure you want to delete this student? This action cannot be undone.",
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                },
+                child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  deleteStudent(id);
+                  Navigator.pop(context); // Close dialog after deleting
+                },
+                child: const Text('Delete', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+}
+void deleteStudent(String id) async {
+  try {
+    await FirebaseFirestore.instance.collection('Users').doc(id).delete();
+    Get.snackbar(
+      'Success',
+      'Student record deleted successfully',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.teal.shade700,
+      colorText: Colors.white,
+    );
+
+    Get.back();
+  } catch (e) {
+    Get.snackbar(
+      'Error',
+      'Failed to delete student: $e',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
     );
   }
 }

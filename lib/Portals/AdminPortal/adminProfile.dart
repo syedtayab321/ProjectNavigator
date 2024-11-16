@@ -97,7 +97,7 @@ class AdminProfilePage extends StatelessWidget {
               height: 50,
               backcolor: Colors.red,
             ),
-            const SizedBox(height: 20),
+            const Spacer(),
           ],
         ),
       ),

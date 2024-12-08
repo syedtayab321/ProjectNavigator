@@ -1,79 +1,65 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:navigatorapp/CustomWidgets/TextWidget.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../CustomWidgets/Snakbar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SupervisorMessageScreen extends StatefulWidget {
-  String receiverId;
-  String receiverName;
-  SupervisorMessageScreen({required this.receiverId,required this.receiverName});
+  final String receiverId;
+  final String receiverName;
+
+  SupervisorMessageScreen({required this.receiverId, required this.receiverName});
+
   @override
   _SupervisorMessageScreenState createState() => _SupervisorMessageScreenState();
 }
 
 class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
   final TextEditingController _messageController = TextEditingController();
-  User? user = FirebaseAuth.instance.currentUser;
+  final User? user = FirebaseAuth.instance.currentUser;
   bool _isSending = false;
 
-  void _sendMessage() async {
+  void _sendMessage({String? documentUrl, String? documentName}) async {
     setState(() {
       _isSending = true;
     });
+
     var uuid = const Uuid();
-    DocumentSnapshot<Map<String, dynamic>> userData = await FirebaseFirestore.instance
-        .collection('Users')
-        .doc(user!.uid)
-        .get();
 
-    if (_messageController.text.trim().isNotEmpty) {
-      await FirebaseFirestore.instance
-          .collection('Chats')
-          .doc(user!.uid)
-          .set({
-        'SenderName': userData['name'],
-        'SenderProfession': userData['role'],
-      });
-
-      await FirebaseFirestore.instance
-          .collection('Chats')
-          .doc(user!.uid)
-          .collection('Messages')
-          .add({
-        'message': _messageController.text.trim(),
-        'Message By':user!.uid,
+    // Validate message or document
+    if ((documentUrl != null && documentName != null) || _messageController.text.trim().isNotEmpty) {
+      var messageData = {
+        'message': _messageController.text.trim().isNotEmpty ? _messageController.text.trim() : null,
+        'document': documentUrl,
+        'documentName': documentName,
+        'Message By': user!.uid,
         'sender': user!.uid,
         'receiverId': widget.receiverId,
         'timestamp': FieldValue.serverTimestamp(),
         'MessageId': uuid.v4(),
-      });
+      };
+
+      messageData.removeWhere((key, value) => value == null);
 
       await FirebaseFirestore.instance
           .collection('Chats')
-          .doc(widget.receiverId)
-          .set({
-        'SenderName': widget.receiverName,
-        'SenderProfession': 'student',
-      });
+          .doc(user!.uid)
+          .collection('Messages')
+          .add(messageData);
 
       await FirebaseFirestore.instance
           .collection('Chats')
           .doc(widget.receiverId)
           .collection('Messages')
-          .add({
-        'message': _messageController.text.trim(),
-        'Message By':user!.uid,
-        'sender': widget.receiverId,
-        'receiverId': user!.uid,
-        'timestamp': FieldValue.serverTimestamp(),
-        'MessageId': uuid.v4(),
-      });
+          .add(messageData);
 
       _messageController.clear();
     } else {
-      showErrorSnackbar('Please type a message');
+      showErrorSnackbar('Please type a message or select a document');
     }
 
     setState(() {
@@ -81,7 +67,61 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
     });
   }
 
-  // Function to format the timestamp
+  Future<void> _pickDocument() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      String fileName = result.files.single.name;
+
+      bool? confirm = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Confirm Upload"),
+          content: Text("Do you want to upload \"$fileName\"?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Upload"),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(child: CircularProgressIndicator()),
+        );
+
+        try {
+          String documentUrl = await _uploadDocument(file, fileName);
+          Navigator.pop(context);
+          _sendMessage(documentUrl: documentUrl, documentName: fileName);
+        } catch (e) {
+          Navigator.pop(context);
+          showErrorSnackbar('Failed to upload document: $e');
+        }
+      }
+    } else {
+      showErrorSnackbar('Document selection cancelled');
+    }
+  }
+
+  Future<String> _uploadDocument(File file, String fileName) async {
+    String path = 'documents/${user!.uid}/${Uuid().v4()}_$fileName';
+    FirebaseStorage storage = FirebaseStorage.instance;
+    Reference ref = storage.ref().child(path);
+    UploadTask uploadTask = ref.putFile(file);
+
+    TaskSnapshot snapshot = await uploadTask;
+    return await snapshot.ref.getDownloadURL();
+  }
+
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return "${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}";
@@ -92,10 +132,11 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
     return Scaffold(
       appBar: AppBar(
         foregroundColor: Colors.white,
-        title: CustomTextWidget(
-            title: 'Message to ${widget.receiverName}', color: Colors.white),
+        title: Text(
+          'Message to ${widget.receiverName}',
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.teal.shade700,
-        elevation: 0,
       ),
       body: Column(
         children: [
@@ -105,8 +146,7 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                   .collection('Chats')
                   .doc(user!.uid)
                   .collection('Messages')
-                  .where('sender', isEqualTo: user!.uid)
-                  .where('receiverId', isEqualTo: widget.receiverId)
+                  .orderBy('timestamp', descending: true) // Fetch latest first
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
@@ -114,7 +154,7 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                 }
                 var messages = snapshot.data!.docs;
                 return ListView.builder(
-                  reverse: false,
+                  reverse: true, // Display latest at the bottom
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     var messageData = messages[index].data() as Map<String, dynamic>;
@@ -127,66 +167,62 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       child: Align(
                         alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Row(
-                          mainAxisAlignment: isSender ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        child: Column(
+                          crossAxisAlignment: isSender
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           children: [
-                            if (!isSender) const SizedBox(width: 10),
-                            Flexible(
-                              child: Container(
+                            if (messageData['message'] != null)
+                              Container(
                                 padding: const EdgeInsets.all(10.0),
                                 decoration: BoxDecoration(
                                   color: isSender ? Colors.teal.shade300 : Colors.white,
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(isSender ? 12 : 0),
-                                    topRight: Radius.circular(isSender ? 0 : 12),
-                                    bottomLeft: const Radius.circular(12),
-                                    bottomRight: const Radius.circular(12),
-                                  ),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black12,
-                                      blurRadius: 5.0,
-                                      spreadRadius: 1.0,
-                                    )
-                                  ],
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    messageData['message'] == 'Delete For Everyone'?
-                                    Text(
-                                      messageData['message'],
-                                      style: TextStyle(
-                                        color: isSender ? Colors.red : Colors.red,
-                                        fontSize: 16,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ):
-                                    Text(
-                                      messageData['message'],
-                                      style: TextStyle(
-                                        color: isSender ? Colors.white : Colors.black87,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      timestamp,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isSender ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7),
-                                      ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  messageData['message'],
+                                  style: TextStyle(
+                                    color: isSender ? Colors.white : Colors.black87,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 3),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _showDeleteDialog(messageData['MessageId']),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                            if (messageData['document'] != null)
+                              GestureDetector(
+                                onTap: () {
+                                  launchUrl(Uri.parse(messageData['document']));
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(10.0),
+                                  decoration: BoxDecoration(
+                                    color: isSender ? Colors.teal.shade300 : Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.insert_drive_file,
+                                        color: isSender ? Colors.white : Colors.blue,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          messageData['documentName'] ?? "Document",
+                                          style: TextStyle(
+                                            color: isSender ? Colors.white : Colors.blue,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            Text(
+                              timestamp,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black.withOpacity(0.7),
+                              ),
                             ),
                           ],
                         ),
@@ -201,6 +237,10 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
             padding: const EdgeInsets.all(10.0),
             child: Row(
               children: [
+                IconButton(
+                  icon: const Icon(Icons.attach_file, color: Colors.teal),
+                  onPressed: _pickDocument,
+                ),
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
@@ -220,14 +260,10 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                         hintText: 'Type your message...',
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a message';
-                        }
-                        return null;
-                      },
                     ),
                   ),
                 ),
@@ -239,7 +275,7 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                   radius: 24,
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white),
-                    onPressed: _sendMessage,
+                    onPressed: () => _sendMessage(),
                   ),
                 ),
               ],
@@ -249,69 +285,4 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
       ),
     );
   }
-  void _showDeleteDialog(String messageId) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete Message'),
-          content: const Text('Do you want to delete this message for yourself or for everyone?'),
-          actions: [
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text('Delete for Me'),
-              onPressed: () {
-                _deleteMessageForMe(messageId);
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Delete for Everyone'),
-              onPressed: () {
-                _deleteMessageForEveryone(messageId);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-  void _deleteMessageForMe(String messageId) async {
-    await FirebaseFirestore.instance
-        .collection('Chats')
-        .doc(user!.uid)
-        .collection('Messages')
-        .doc(messageId)
-        .delete();
-      showSuccessSnackbar('Message deleted for you');
-  }
-  void _deleteMessageForEveryone(String messageId) async {
-    await FirebaseFirestore.instance
-        .collection('Chats')
-        .doc(user!.uid)
-        .collection('Messages')
-        .doc(messageId)
-        .update({
-         'message':'Delete For Everyone'
-        });
-
-    // Delete from the receiver's messages
-    await FirebaseFirestore.instance
-        .collection('Chats')
-        .doc(widget.receiverId)
-        .collection('Messages')
-        .doc(messageId)
-        .update({
-      'message':'Delete For Everyone'
-        });
-
-    showSuccessSnackbar('Message deleted for everyone');
-  }
 }
-
-
-

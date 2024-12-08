@@ -22,12 +22,15 @@ class _ProjectRequestState extends State<ProjectRequest> {
 
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
+
         centerTitle: true,
         title: const Text(
           "Your Project",
+
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.tealAccent,
+        backgroundColor: Colors.teal.shade700,
         elevation: 4,
       ),
       body: Padding(

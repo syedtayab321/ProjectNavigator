@@ -89,6 +89,7 @@ class _StudentMessageScreenState extends State<StudentMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        foregroundColor: Colors.white,
         title: CustomTextWidget(
             title: 'Message to ${widget.receiverName}', color: Colors.white),
         backgroundColor: Colors.teal.shade700,
@@ -111,7 +112,7 @@ class _StudentMessageScreenState extends State<StudentMessageScreen> {
                 }
                 var messages = snapshot.data!.docs;
                 return ListView.builder(
-                  reverse: true,
+                  reverse: false,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     var messageData = messages[index].data() as Map<String, dynamic>;

@@ -35,7 +35,7 @@ class ProjectRequestController extends GetxController {
         }
         print('Projects fetched: ${projectList.length}');
       } else {
-        showErrorSnackbar('No project found for this student');
+        print('No project found for this student');
       }
     } catch (e) {
       showErrorSnackbar('Failed to fetch project details: $e');

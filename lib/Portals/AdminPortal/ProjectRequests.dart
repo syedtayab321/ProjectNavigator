@@ -83,7 +83,7 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
                       const SizedBox(height: 16),
                       _buildProjectDetail('Description:', project['description'], Icons.description),
                       const SizedBox(height: 16),
-                      _buildFileButton(project['fileUrl']),
+                      _buildFileButton(project['fileUrl'] ?? ""),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -248,8 +248,9 @@ class _ProjectRequestsPageState extends State<ProjectRequestsPage> {
       await dio.download(fileUrl, filePath);
 
       OpenFile.open(filePath);
-    } catch (e) {
-      showErrorSnackbar('Error Could not download and open file: $e');
+        } catch (e) {
+      showSuccessSnackbar('File not provided');
+      print('$e');
     }
   }
 }

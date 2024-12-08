@@ -106,41 +106,43 @@ class StudentProfile extends StatelessWidget {
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Elevated_button(
-                                  text:'Edit',
+                          child: SingleChildScrollView(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Elevated_button(
+                                    text:'Edit',
+                                    color: Colors.white,
+                                    backcolor: Colors.teal,
+                                    padding: 12,
+                                    radius: 10,
+                                    height: 14,
+                                    width: 150,
+                                    path: (){
+                                      Get.to(
+                                        UpdateStudentPage(
+                                          name: userData['name'],
+                                          department: userData['department'],
+                                          session: userData['session'],
+                                        ),
+                                      );
+                                    }
+                                ),
+                                const SizedBox(height: 20),
+                                Elevated_button(
+                                  text: 'Logout',
                                   color: Colors.white,
-                                  backcolor: Colors.teal,
-                                  padding: 10,
+                                  path: () {
+                                    logout(context);
+                                  },
+                                  padding: 12,
                                   radius: 10,
+                                  width: 150,
                                   height: 10,
-                                  width: 170,
-                                  path: (){
-                                    Get.to(
-                                      UpdateStudentPage(
-                                        name: userData['name'],
-                                        department: userData['department'],
-                                        session: userData['session'],
-                                      ),
-                                    );
-                                  }
-                              ),
-                              const SizedBox(height: 20),
-                              Elevated_button(
-                                text: 'Logout',
-                                color: Colors.white,
-                                path: () {
-                                  logout(context);
-                                },
-                                padding: 12,
-                                radius: 10,
-                                width: 150,
-                                height: 10,
-                                backcolor: Colors.red,
-                              ),
-                            ],
+                                  backcolor: Colors.red,
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       ],

@@ -154,7 +154,7 @@ class _StudentMessageScreenState extends State<StudentMessageScreen> {
                   .collection('Chats')
                   .doc(user!.uid)
                   .collection('Messages')
-                  .orderBy('timestamp', descending: true) // Order messages by timestamp
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
@@ -162,7 +162,7 @@ class _StudentMessageScreenState extends State<StudentMessageScreen> {
                 }
                 var messages = snapshot.data!.docs;
                 return ListView.builder(
-                  reverse: true, // Reverse the ListView
+                  reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     var messageData = messages[index].data() as Map<String, dynamic>;

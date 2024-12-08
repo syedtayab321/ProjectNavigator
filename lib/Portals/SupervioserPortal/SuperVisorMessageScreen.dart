@@ -30,7 +30,6 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
 
     var uuid = const Uuid();
 
-    // Validate message or document
     if ((documentUrl != null && documentName != null) || _messageController.text.trim().isNotEmpty) {
       var messageData = {
         'message': _messageController.text.trim().isNotEmpty ? _messageController.text.trim() : null,
@@ -146,7 +145,7 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                   .collection('Chats')
                   .doc(user!.uid)
                   .collection('Messages')
-                  .orderBy('timestamp', descending: true) // Fetch latest first
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
@@ -154,7 +153,7 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
                 }
                 var messages = snapshot.data!.docs;
                 return ListView.builder(
-                  reverse: true, // Display latest at the bottom
+                  reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     var messageData = messages[index].data() as Map<String, dynamic>;

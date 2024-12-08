@@ -23,78 +23,77 @@ class ManageUsersPage extends StatelessWidget {
           },
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Search Bar
-              Container(
-                width: screenWidth * 0.9,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                child: const TextField(
-                  decoration: InputDecoration(
-                    icon: Icon(Icons.search),
-                    hintText: 'Enter Student Roll No.',
-                    border: InputBorder.none,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Search Bar
+            Container(
+              width: screenWidth * 0.9,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
                   ),
+                ],
+              ),
+              child: const TextField(
+                decoration: InputDecoration(
+                  icon: Icon(Icons.search),
+                  hintText: 'Enter Student Roll No.',
+                  border: InputBorder.none,
                 ),
               ),
-              const SizedBox(height: 20),
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('Users')
-                    .where('role', isEqualTo: 'Student')
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return const Center(child: Text('Error fetching data'));
-                  } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text('No students found'));
-                  } else {
-                    final students = snapshot.data!.docs;
-                    return SizedBox(
-                      height: screenHeight * 0.35,
-                      child: GridView.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: screenWidth / (screenHeight * 0.35),
-                        ),
-                        itemCount: students.length,
-                        itemBuilder: (context, index) {
-                          final student = students[index].data() as Map<String, dynamic>;
-                          return UserCard(
-                            name: student['name'] ?? 'N/A',
-                            uid: student['uid'] ?? 'N/A',
-                            rollno: student['roll_no'] ?? 'N/A',
-                            email: student['email'] ?? 'N/A',
-                            department: student['department'] ?? 'N/A',
-                            session: student['session'] ?? 'N/A',
-                            status: student['status'] ?? 'N/A',
-                            semester: student['semester'] ?? 'N/A',
-                          );
-                        },
+            ),
+            const SizedBox(height: 20),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Users')
+                  .where('role', isEqualTo: 'Student')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return const Center(child: Text('Error fetching data'));
+                } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No students found'));
+                } else {
+                  final students = snapshot.data!.docs;
+                  return Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 2,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 5 / 4,
                       ),
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
+                      itemCount: students.length,
+                      itemBuilder: (context, index) {
+                        final student = students[index].data() as Map<String, dynamic>;
+                        return UserCard(
+                          name: student['name'] ?? 'N/A',
+                          uid: student['uid'] ?? 'N/A',
+                          rollno: student['roll_no'] ?? 'N/A',
+                          email: student['email'] ?? 'N/A',
+                          department: student['department'] ?? 'N/A',
+                          session: student['session'] ?? 'N/A',
+                          status: student['status'] ?? 'N/A',
+                          semester: student['semester'] ?? 'N/A',
+                        );
+                      },
+                    ),
+                  );
+                }
+              },
+            ),
+
+          ],
         ),
       ),
     );

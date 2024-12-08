@@ -130,6 +130,7 @@ class _SupervisorMessageScreenState extends State<SupervisorMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         foregroundColor: Colors.white,
         title: Text(
           'Message to ${widget.receiverName}',

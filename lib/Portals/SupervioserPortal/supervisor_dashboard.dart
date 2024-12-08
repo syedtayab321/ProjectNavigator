@@ -60,9 +60,13 @@ class _SupervisorDashboardPageState extends State<SupervisorDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.tealAccent,
-        foregroundColor: Colors.black,
-        title: const CustomTextWidget(title: 'Supervisor Dashboard'),
+        centerTitle: true,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Supervisor Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.teal.shade700,
       ),
       drawer: _buildDrawer(context),  // Drawer added here
       body: Column(

@@ -16,10 +16,13 @@ class ProjectDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.tealAccent,
-        foregroundColor: Colors.black,
-        title: const Text('Project Details'),
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Project Details',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.teal.shade700,
       ),
       body: SingleChildScrollView(
         child: Padding(

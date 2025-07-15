@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,6 +15,7 @@ class StudentDashboardPage extends StatefulWidget {
 }
 
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
+  User? user = FirebaseAuth.instance.currentUser;
   final List<String> sessions = [
     '2024-2028',
     '2023-2027',
@@ -74,7 +76,7 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'FYP Navigator - Student Portal',
+                      'welcome - ',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
